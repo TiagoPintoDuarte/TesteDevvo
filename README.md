@@ -50,5 +50,5 @@ Este repositório contém um conjunto de testes de API utilizando Newman, Postma
 
 - [Documentação Postman](https://learning.postman.com/docs/getting-started/introduction/)
 - [Documentação Newman](https://www.npmjs.com/package/newman)
-- [Integração de Webhooks no Slack](https://api.slack.com/messaging/webhooks).
+- [Integração de Webhooks no Slack](https://api.slack.com/messaging/webhooks)
 
