@@ -1,0 +1,40 @@
+name: Run Newman Tests and Notify Slack
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  run-newman-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          # Install Node.js and required dependencies
+          npm install -g newman
+
+      - name: List Files for Debugging
+        run: ls -al
+
+      - name: Run Newman Tests
+        id: newman
+        run: |
+          newman run DEVVO.postman_collection.json
+        continue-on-error: true
+
+      - name: Notify Slack on Failure
+        if: steps.newman.outcome == 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "Enviando notificação para o Slack com payload formatado"
+          ACTION_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -X POST "$SLACK_WEBHOOK_URL" \
+               -H 'Content-Type: application/json' \
+               --data "$(jq -n --arg text "🚨 Testes automatizados falharam no repositório! Verifique os detalhes em $ACTION_URL" '{text: $text, username: "webhookbot", icon_emoji: ":ghost:"}')"

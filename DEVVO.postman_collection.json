@@ -1,0 +1,300 @@
+{
+	"info": {
+		"_postman_id": "675ddc8f-3df2-41c4-9207-9735ce50e692",
+		"name": "DEVVO",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32367995"
+	},
+	"item": [
+		{
+			"name": "StatusCode deve ser igual a 405",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"O status Code da requisicao deve ser 405\", ()=> {\r",
+							"    pm.response.to.have.status(405);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/random_joke",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"random_joke"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validação de contrato",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const jsonData = pm.response.json(); // Parse da resposta JSON\r",
+							"\r",
+							"pm.test(\"Status code is 200\", ()=> {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que o campo type é uma string\", ()=> {\r",
+							"    pm.expect(jsonData.type).to.be.a(\"string\"); \r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que o campo setup é uma string\", ()=> {\r",
+							"    pm.expect(jsonData.setup).to.be.a(\"string\"); \r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que o campo punchline é uma string\", ()=> {\r",
+							"    pm.expect(jsonData.punchline).to.be.a(\"string\")\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validar que o campo id é um number\", ()=> {\r",
+							"    pm.expect(jsonData.id).to.be.a(\"number\")\r",
+							"});\r",
+							"\r",
+							"\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/random_joke",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"random_joke"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validando consistencia de dados - 50 request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Configuração inicial\r",
+							"const maxRequests = 50; // Total de requisições\r",
+							"const url = \"http://official-joke-api.appspot.com/random_joke\";\r",
+							"const uniqueIds = new Set(); // Conjunto para armazenar IDs únicos\r",
+							"\r",
+							"// Função para validar resposta\r",
+							"function validateResponse(response, index) {\r",
+							"    const data = response.json(); // Corrige aqui para chamar a função que retorna o JSON\r",
+							"    console.log(data);\r",
+							"\r",
+							"    const isUnique = !uniqueIds.has(data.id); // Verifica se o ID já existe\r",
+							"    uniqueIds.add(data.id); // Adiciona o ID ao conjunto\r",
+							"\r",
+							"    // Validações\r",
+							"    pm.test(`Requisição ${index + 1}: Resposta válida`, () => {\r",
+							"        pm.expect(response.responseTime).to.be.below(1500); // Limite de 1,5s\r",
+							"        pm.expect(data.id).to.be.a('number');\r",
+							"        pm.expect(data.setup).to.not.be.empty;\r",
+							"        pm.expect(data.punchline).to.not.be.empty;\r",
+							"    });\r",
+							"\r",
+							"    pm.test(`Requisição ${index + 1}:Validar se o ID é único`, () => {\r",
+							"        pm.expect(isUnique).to.be.true;\r",
+							"    });\r",
+							"\r",
+							"    console.log(`Requisição ${index + 1} concluída (${response.responseTime}ms, ID: ${data.id}).`);\r",
+							"}\r",
+							"\r",
+							"// Função recursiva para enviar requisições\r",
+							"function sendRequestSequentially(index, total) {\r",
+							"    if (index >= total) {\r",
+							"        console.log(\"Todas as requisições foram concluídas.\");\r",
+							"        console.log(`IDs únicos coletados: ${uniqueIds.size}/${maxRequests}`);\r",
+							"        return; // Base da recursão\r",
+							"    }\r",
+							"\r",
+							"    pm.sendRequest({ url, method: \"GET\" }, (err, response) => {\r",
+							"        if (err) {\r",
+							"            console.error(`Erro na requisição ${index + 1}:`, err);\r",
+							"            return;\r",
+							"        }\r",
+							"        validateResponse(response, index); // Chama a função de validação\r",
+							"        sendRequestSequentially(index + 1, total); // Próxima requisição\r",
+							"    });\r",
+							"}\r",
+							"\r",
+							"// Executa as requisições\r",
+							"sendRequestSequentially(0, maxRequests);\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/random_joke",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"random_joke"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Teste de carga - 10 request",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const maxRequests = 10; \r",
+							"const url = \"http://official-joke-api.appspot.com/random_joke\"; \r",
+							"\r",
+							"function validateResponseTime(index, response) {\r",
+							"    const responseTime = response.responseTime;\r",
+							"\r",
+							"    pm.test(`Requisição ${index + 1}: Validar se o tempo de resposta dentro do limite de 2s`, function () {\r",
+							"        pm.expect(responseTime).to.be.below(2000);\r",
+							"    });\r",
+							"}\r",
+							"\r",
+							"// Disparar múltiplas requisições\r",
+							"for (let i = 0; i < maxRequests; i++) {\r",
+							"    pm.sendRequest(\r",
+							"        {\r",
+							"            url: url,\r",
+							"            method: \"GET\"\r",
+							"        },\r",
+							"        function (err, response) {\r",
+							"            if (err) {\r",
+							"                console.error(`Erro na requisição ${i + 1}:`, err);\r",
+							"            } else {\r",
+							"                // Valida o tempo de resposta\r",
+							"                validateResponseTime(i, response);\r",
+							"            }\r",
+							"        }\r",
+							"    );\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Response status code is 200\", function () {\r",
+							"  pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/random_joke",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"random_joke"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL",
+			"value": "http://official-joke-api.appspot.com",
+			"type": "string"
+		}
+	]
+}
